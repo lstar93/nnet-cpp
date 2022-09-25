@@ -18,7 +18,7 @@ namespace neural_net {
 class neural_net_t {
 
     std::vector<layer_t> layers_vec;
-    double net_cost = 1;
+    double net_cost = 100000;
 
     public:
 
@@ -34,7 +34,7 @@ class neural_net_t {
         return layers_vec.size();
     }
 
-    neural_net_t& add_layer(size_t out_size, activation_function_t activ_func = activation_function::linear);
+    neural_net_t& add_layer(size_t out_size, std::shared_ptr<activation_function_t> activ_func = std::make_shared<linear_t>());
 
     std::vector<double> compute_output(data_chunk_t data_point);
 
@@ -54,9 +54,13 @@ class neural_net_t {
     // apply gradients to all layers
     void apply_gradients(double learn_rate);
 
-    // run a single iteration of gradient descent
+    // update all gradients
+    void update_gradients(data_chunk_t& data_point);
+
+    void clear_gradients();
+
+    // back propagation learn function
     void learn(std::vector<data_chunk_t>& training_input_data, double learn_rate);
-    void learn(data_chunk_t& training_input_data, double learn_rate);
 };
 
 }

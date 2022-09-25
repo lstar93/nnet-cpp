@@ -13,26 +13,15 @@
 
 namespace plt = matplotlibcpp;
 
-std::vector<std::vector<double>> generate_data(size_t size) {
-    std::uniform_real_distribution<double> unif(-10,10);
-    std::default_random_engine re;
-    std::vector<std::vector<double>> ret;
-    for(size_t i=0; i<size; ++i) {
-        ret.emplace_back(std::vector<double>{unif(re), unif(re)});
-    }
-
-    return ret;
-}
-
 std::vector<neural_net::data_chunk_t> generate_learn_data(size_t size) {
-    std::uniform_real_distribution<double> unif(0,7);
+    std::uniform_real_distribution<double> unif(0,20);
     std::default_random_engine re;
     std::vector<neural_net::data_chunk_t> ret;
     for(size_t i=0; i<size; ++i) {
         std::vector<double> data {unif(re), unif(re)};
         neural_net::data_chunk_t chunk;
         chunk.input = data;
-        if(data.at(0) < 5 && data.at(1) < 4) {
+        if(data.at(0) < 10 && data.at(1) < 10) {
             chunk.expected_output = {1, 0};
         }
         else {
@@ -48,18 +37,20 @@ int main() {
 
     neural_net::neural_net_t nnet;
     nnet.add_layer(2)
+        .add_layer(32, neural_net::activation_function::relu)
         .add_layer(64, neural_net::activation_function::relu)
-        .add_layer(64, neural_net::activation_function::relu)
+        .add_layer(32, neural_net::activation_function::relu)
         .add_layer(2, neural_net::activation_function::relu);
 
     // test
-    size_t batch_size = 32;
+    size_t batch_size = 128;
     size_t chunk_start = 0;
     size_t chunk_end = batch_size;
 
-    auto data_chunks = generate_learn_data(128);
+    auto data_chunks = generate_learn_data(2048);
     auto dit = data_chunks.begin();
-    while(nnet.current_cost() > 0.1) {
+
+    while(nnet.current_cost() > 1) {
         //d.dump();
         std::vector<neural_net::data_chunk_t> batch(data_chunks.begin()+chunk_start, data_chunks.begin()+chunk_end);
         chunk_start = chunk_end;
@@ -68,23 +59,32 @@ int main() {
             chunk_start = 0;
             chunk_end = batch_size;
         }
-        std::cout << "chunk_start: "<< chunk_start << ", chunk_end: " << chunk_end << std::endl;
+        // std::cout << "chunk_start: "<< chunk_start << ", chunk_end: " << chunk_end << std::endl;
 
-        nnet.learn(batch, 0.01);
-        std::cout << nnet.current_cost() << std::endl;
+        nnet.learn(batch, 0.00001);
+        // std::cout << nnet.current_cost() << std::endl;
     }
 
     neural_net::data_chunk_t test;
     test.input = {3, 3};
     std::cout << nnet.classify(test) << std::endl;
 
-    test.input = {3, 7};
+    test.input = {22, 15};
     std::cout << nnet.classify(test) << std::endl;
 
-    test.input = {6, 2};
+    test.input = {10, 10};
+    std::cout << nnet.classify(test) << std::endl;
+
+    test.input = {15, 12};
     std::cout << nnet.classify(test) << std::endl;
 
     test.input = {1, 3.5};
+    std::cout << nnet.classify(test) << std::endl;  
+
+    test.input = {1, 33};
+    std::cout << nnet.classify(test) << std::endl;  
+
+    test.input = {22, 5};
     std::cout << nnet.classify(test) << std::endl;  
     //std::cout << nnet.size() << std::endl;
 
